@@ -16,7 +16,6 @@ def init():
   pipe = VersatileDiffusionDualGuidedPipeline.from_pretrained(
       "shi-labs/versatile-diffusion"
   ).to("cuda:0")
-  pipe.remove_unused_weights()
 
   context = {
       "pipe": pipe
@@ -29,15 +28,13 @@ def handler(context: dict, request: Request) -> Response:
     pipe = context.get("pipe")
 
     generator = torch.Generator(device="cuda").manual_seed(0)
-    text_to_image_strength = 0.75
 
-    image = request.json.get("image")
-    prompt = request.json.get("prompt")
-    response = requests.get(url)
-    image = Image.open(BytesIO(response.content)).convert("RGB")
+    image1 = request.json.get("image")
+    
+    image = Image.open(BytesIO(image1.content)).convert("RGB")
   
     
-    image = pipe(prompt=prompt, image=image, text_to_image_strength=text_to_image_strength, generator=generator).images[0]
+    image = pipe(image=image, generator=generator).images[0]
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue())
